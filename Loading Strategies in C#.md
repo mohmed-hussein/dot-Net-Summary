@@ -70,4 +70,82 @@ Each loading strategy has its own use cases and trade-offs. Choosing the right s
 - **Use Eager Loading** when you need all related data upfront to simplify data access.
 - **Use Lazy Loading** when you want to defer data loading to improve initial performance, being mindful of potential pitfalls like the N+1 query problem.
 
+Sure! Here are the conditions and steps to set up Lazy Loading in C# using Entity Framework:
+
+---
+
+# Setting Up Lazy Loading in C#
+
+Lazy Loading in Entity Framework is a convenient way to load related entities on demand. However, certain conditions and configurations need to be met to enable and effectively use Lazy Loading.
+
+## Conditions to Set Up Lazy Loading
+
+1. **Virtual Navigation Properties**: Ensure that the navigation properties are marked as `virtual`. This allows Entity Framework to create proxy classes that handle the lazy loading.
+
+2. **Proxy Creation Enabled**: Lazy Loading relies on proxy objects, so proxy creation must be enabled in the Entity Framework context.
+
+3. **Lazy Loading Enabled**: Lazy Loading must be explicitly enabled in the Entity Framework context.
+
+4. **Context Lifetime Management**: The DbContext should be alive as long as the entities are being used to ensure lazy loading works correctly.
+
+## Step-by-Step Setup
+
+### Step 1: Define Virtual Navigation Properties
+Ensure that your navigation properties are marked as `virtual` in your entity classes.
+
+```csharp
+public class Order
+{
+    public int OrderId { get; set; }
+    public virtual ICollection<OrderItem> OrderItems { get; set; }
+}
+
+public class OrderItem
+{
+    public int OrderItemId { get; set; }
+    public int OrderId { get; set; }
+    public virtual Order Order { get; set; }
+}
 ```
+
+### Step 2: Enable Proxy Creation and Lazy Loading
+Configure your `DbContext` to enable proxy creation and lazy loading. This is usually enabled by default, but you can explicitly set it in the `DbContext` configuration.
+
+```csharp
+public class ApplicationDbContext : DbContext
+{
+    public ApplicationDbContext() : base("name=ApplicationDbContext")
+    {
+        this.Configuration.ProxyCreationEnabled = true;
+        this.Configuration.LazyLoadingEnabled = true;
+    }
+
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
+}
+```
+
+### Step 3: Ensure Context Lifetime Management
+Make sure that the `DbContext` instance is alive as long as you need to access lazy-loaded properties. This typically means managing the context's lifetime carefully, especially in web applications.
+
+#### Example of accessing Lazy-Loaded properties:
+```csharp
+using (var context = new ApplicationDbContext())
+{
+    var order = context.Orders.Find(orderId);
+    var items = order.OrderItems; // This triggers lazy loading
+}
+```
+
+### Step 4: Additional Configuration (Optional)
+You can also configure lazy loading behavior in the `OnModelCreating` method if needed, although it's not typically necessary for basic setups.
+
+## Summary
+
+To set up Lazy Loading in Entity Framework, ensure:
+- Navigation properties are marked as `virtual`.
+- Proxy creation is enabled (`ProxyCreationEnabled`).
+- Lazy Loading is enabled (`LazyLoadingEnabled`).
+- Proper management of `DbContext` lifetime.
+
+These steps will allow you to take advantage of lazy loading, ensuring related entities are loaded only when they are accessed, which can improve the performance of your application by delaying data retrieval until it is actually needed.
