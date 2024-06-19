@@ -6,7 +6,10 @@ Explicit Loading is a strategy where the developer manually requests related dat
 ### Example
 ```csharp
 var order = context.Orders.Find(orderId);
-context.Entry(order).Collection(o => o.OrderItems).Load();
+context.Entry(order).Collection(o => o.OrderItems).Load(); // many itmes
+
+var Employee = from E in Context.Employees where E.id == 1 slect E;
+Context.Entry(Employees).Reference(E => E.Department); // just one itme coz every employee work on one department
 ```
 
 ### Advantages
